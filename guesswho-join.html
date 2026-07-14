@@ -204,7 +204,7 @@ function listenToGame(){
         namesEl.style.display = "block";
         waitEl.style.display = "none";
         namesEl.innerHTML = "";
-        ALL_VOTERS.forEach(name => {
+        ALL_VOTERS.slice().sort((a,b) => a.localeCompare(b)).forEach(name => {
           const btn = document.createElement("button");
           btn.className = "name-btn";
           btn.textContent = name;
