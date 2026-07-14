@@ -126,11 +126,10 @@ const db = getDatabase(app);
 
 /* Must match the names in guesswho-host.html PLAYERS, in the same order — this order is what
    determines the correct answer for each round (roundIdx -> NAMES[roundIdx]). Don't sort this one. */
-const NAMES = ["Angel Lin", "Ashley Wood", "Daniel Pappas", "Dimitri Smith", "Grace Nasr", "Melissa Trager", "Pooja Bansal", "Raj Parikh", "Rebecca Kim", "Robert Lofthouse", "Shradha Muktidoot", "William Morris", "Jan McCreary", "Rachel Goldstein", "Bradlee Dabu"];
+const NAMES = ["Angel Lin", "Ashley Wood", "Daniel Pappas", "Dimitri Smith", "Grace Nasr", "Melissa Trager", "Pooja Bansal", "Raj Parikh", "Rebecca Kim", "Robert Lofthouse", "Shradha Muktidoot", "William Morris", "Jan McCreary", "Rachel Goldstein", "Bradlee Dabu", "Neha Kininge"];
 
-/* Everyone who can join and guess — includes teammates without a photo round (like Neha).
-   Shown alphabetically on the join screen and as guess options. */
-const ALL_VOTERS = [...NAMES, "Neha Kininge"].slice().sort((a,b) => a.localeCompare(b));
+/* Everyone who can join and guess. Shown alphabetically on the join screen and as guess options. */
+const ALL_VOTERS = NAMES.slice().sort((a,b) => a.localeCompare(b));
 
 const voterId = Math.random().toString(36).slice(2);
 let myName = null;
