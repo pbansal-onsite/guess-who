@@ -49,7 +49,7 @@ h1{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;}
 </style>
 </head>
 <body>
-<div class="build-tag">v3-quips</div>
+<div class="build-tag">v5-round-order</div>
 
 <!-- NAME PICKER -->
 <div class="screen active" id="s-picker">
@@ -90,7 +90,6 @@ h1{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;}
     <div style="color:#999;font-size:15px;">Your guess</div>
     <div class="your-guess" id="q-your-guess"></div>
     <div class="waiting">Waiting for the reveal on the big screen...</div>
-    <div class="quip" id="q-quip"></div>
   </div>
 </div>
 
@@ -127,18 +126,8 @@ const db = getDatabase(app);
 // these are known to work with the existing database rules. Safe since you're not running
 // both games at the same time.
 
-/* Fun rotating quips — picked randomly per round so the wait doesn't feel static. */
-const WAITING_QUIPS = [
-  "🔍 Case file under review...",
-  "🕵️ The jury (aka everyone else) is still deliberating",
-  "📋 Cross-referencing your guess against known Slack behavior",
-  "☕ This is taking longer than a \"quick 15-min sync\"",
-  "🧠 Somewhere, a detective badge hangs in the balance",
-  "📨 Probably still typing \"just circling back\" to themselves",
-  "🔦 Shining a light on the evidence...",
-  "🐌 Moving at the speed of a Friday 4pm meeting",
-];
-
+/* Fun reveal-screen quips — 16 unique lines each (one per round), shuffled once per
+   game session so the order varies each time but no line repeats across the 16 rounds. */
 const CORRECT_QUIPS = [
   "Certified people-reader 🕵️‍♀️",
   "You've clearly read their Slack status before",
@@ -146,6 +135,16 @@ const CORRECT_QUIPS = [
   "Case closed. 🔒",
   "The spreadsheet agrees with you.",
   "100% would trust you with the company gossip",
+  "Elementary, my dear guesser",
+  "You'd survive a background check on this one",
+  "Certified Lyft lore historian",
+  "The evidence lines up perfectly",
+  "Correctly cross-referenced. Nice work, detective.",
+  "You know your people. Literally.",
+  "Textbook detective work right there",
+  "This one's going in your personnel file (the good kind)",
+  "Confirmed: you pay attention in meetings",
+  "Gold star for reading the room",
 ];
 
 const WRONG_QUIPS = [
@@ -155,11 +154,34 @@ const WRONG_QUIPS = [
   "That's a swing and a miss, champ",
   "The evidence disagrees with you",
   "Even Dobby couldn't have guessed that one",
+  "Plot twist: nope",
+  "The case remains open",
+  "Your detective license is under review",
+  "That guess just got escalated to legal",
+  "Somewhere, a real detective is disappointed",
+  "Nice try, but no cigar (or coffee)",
+  "The alibi didn't hold up",
+  "Definitely not it, but A for effort",
+  "Your Slack sleuthing needs work",
+  "Wrong! But confidently wrong, we respect that",
 ];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+// Shuffled once when the page loads (once per game session) — round i always draws
+// from index i, so all 16 lines get used with no repeats regardless of outcome mix.
+const SHUFFLED_CORRECT_QUIPS = shuffle(CORRECT_QUIPS);
+const SHUFFLED_WRONG_QUIPS = shuffle(WRONG_QUIPS);
 
 /* Must match the names in guesswho-host.html PLAYERS, in the same order — this order is what
    determines the correct answer for each round (roundIdx -> NAMES[roundIdx]). Don't sort this one. */
-const NAMES = ["Angel Lin", "Ashley Wood", "Daniel Pappas", "Dimitri Smith", "Grace Nasr", "Melissa Trager", "Pooja Bansal", "Raj Parikh", "Rebecca Kim", "Robert Lofthouse", "Shradha Muktidoot", "William Morris", "Jan McCreary", "Rachel Goldstein", "Bradlee Dabu", "Neha Kininge"];
+const NAMES = ["Jan McCreary", "Raj Parikh", "Pooja Bansal", "William Morris", "Rachel Goldstein", "Rebecca Kim", "Robert Lofthouse", "Ashley Wood", "Shradha Muktidoot", "Melissa Trager", "Angel Lin", "Bradlee Dabu", "Dimitri Smith", "Grace Nasr", "Daniel Pappas", "Neha Kininge"];
 
 /* Everyone who can join and guess. Shown alphabetically on the join screen and as guess options. */
 const ALL_VOTERS = NAMES.slice().sort((a,b) => a.localeCompare(b));
@@ -233,7 +255,6 @@ function listenToGame(){
         namesEl.style.display = "none";
         waitEl.style.display = "flex";
         document.getElementById("q-your-guess").textContent = myGuesses[roundIdx];
-        document.getElementById("q-quip").textContent = WAITING_QUIPS[Math.floor(Math.random()*WAITING_QUIPS.length)];
       } else {
         namesEl.style.display = "block";
         waitEl.style.display = "none";
@@ -249,7 +270,6 @@ function listenToGame(){
             namesEl.style.display = "none";
             waitEl.style.display = "flex";
             document.getElementById("q-your-guess").textContent = name;
-            document.getElementById("q-quip").textContent = WAITING_QUIPS[Math.floor(Math.random()*WAITING_QUIPS.length)];
           };
           namesEl.appendChild(btn);
         });
@@ -268,8 +288,8 @@ function listenToGame(){
         : `<span class="wrong">Not quite</span>`;
       document.getElementById("r-answer").textContent = correctName;
       document.getElementById("r-quip").textContent = isCorrect
-        ? CORRECT_QUIPS[Math.floor(Math.random()*CORRECT_QUIPS.length)]
-        : WRONG_QUIPS[Math.floor(Math.random()*WRONG_QUIPS.length)];
+        ? SHUFFLED_CORRECT_QUIPS[roundIdx]
+        : SHUFFLED_WRONG_QUIPS[roundIdx];
 
       let score = 0;
       Object.entries(myGuesses).forEach(([idx,g]) => {
